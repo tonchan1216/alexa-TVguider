@@ -11,6 +11,8 @@
   "dependencies": {
     "ask-sdk-core": "^2.0.0",
     "ask-sdk-model": "^1.0.0",
-    "i18next": "^15.0.5"
+    "i18next": "^15.0.5",
+    "request": "^2.88.2",
+    "request-promise": "^4.2.6"
   }
 }
