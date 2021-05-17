@@ -1,6 +1,9 @@
 const request = require("request-promise");
+require('dotenv').config()
 
-const baseUrl = "https://tv.yahoo.co.jp/api/adapter?_api=mindsSiQuery";
+const env = process.env
+
+const baseUrl = env.BASE_URL;
 const genre = {
   "ドラマ": "0x3",
   "映画": "0x6",
@@ -82,9 +85,6 @@ const oc = {
   "30分以上": "+3000",
   "60分以上": "+6000"
 };
-const today = new Date();
-const startDate = new Date(today.getFullYear(), today.getMonth(), today.getDate(), 18, 0,0);
-const startDateEnd = new Date(today.getFullYear(), today.getMonth(), today.getDate(), 24, 0,0);
 const ob = {
   "すべて": "",
   "新番組": "🈟",
@@ -102,34 +102,44 @@ const q = "";
 const limit = 1;
 const offset = 0;
 
-const options = {
-  url: baseUrl,
-  method: "POST",
-  form: {
-    areaId: area["東京"],
-    broadCastStartDate: Math.floor(startDate.getTime() / 1000),
-    broadCastStartDateEnd: Math.floor(startDateEnd.getTime() / 1000),
-    duration: oc["30分以上"],
-    element: ob["すべて"],
-    majorGenreId: genre["バラエティ"],
-    query: q,
-    results: limit,
-    siTypeId: t["地上波"],
-    sort: sort["見たい！数順"],
-    start: offset,
-  },
-  json: true,
-};
+async function getTVProgramm(loc, category){
+  const today = new Date();
+  const startDate = today.getHours() > 18 ? today : new Date(today.getFullYear(), today.getMonth(), today.getDate(), 18, 0,0);
+  const startDateEnd = new Date(today.getFullYear(), today.getMonth(), today.getDate(), 27, 0,0);
 
-request(options)
-  .then(function (body) {
-    const response = body["ResultSet"];
-    if(response["attribute"]["totalResultsReturned"] == 0){
-      throw "404: No Returned";
-    }
-    console.log(response["Result"][0]["programTitle"]);
-    console.log(response["Result"][0]["broadCastStartTime"]);
-  })
-  .catch(function (err) {
-    console.log(err);
+  const options = {
+    url: baseUrl,
+    method: "POST",
+    form: {
+      areaId: area[loc],
+      broadCastStartDate: Math.floor(startDate.getTime() / 1000),
+      broadCastStartDateEnd: Math.floor(startDateEnd.getTime() / 1000),
+      duration: oc["30分以上"],
+      element: ob["すべて"],
+      majorGenreId: genre[category],
+      query: q,
+      results: limit,
+      siTypeId: t["地上波"],
+      sort: sort["見たい！数順"],
+      start: offset,
+    },
+    json: true,
+  };
+
+  return new Promise((resolve, reject) => {
+    request(options)
+    .then((body) => {
+      const response = body["ResultSet"];
+      if(response["attribute"]["totalResultsReturned"] == 0){
+        throw "404: No Returned";
+      }
+
+      resolve(response["Result"][0]);
+    })
+    .catch((err) => {
+      reject(err);
+    });
   });
+}
+
+getTVProgramm().then(r => console.log(r))
