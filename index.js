@@ -1,10 +1,8 @@
-//
-// Alexa Fact Skill - Sample for Beginners
-//
-
-// sets up dependencies
 const Alexa = require('ask-sdk-core');
 const i18n = require('i18next');
+
+const postalcode = require('./postalcode');
+const scraping = require('./scraping');
 
 // core functionality for fact skill
 const GetNewFactHandler = {
@@ -186,3 +184,9 @@ const languageStrings = {
   'ja': jpData,
   'ja-JP': jpjpData,
 };
+
+
+scraping.getTVProgramm("東京", "バラエティ").then((r) => console.log(r));
+postalcode.getPrefectures("1140023")
+  .then((r) => console.log(r))
+  .catch((e) => console.log(e));
