@@ -185,8 +185,11 @@ const languageStrings = {
   'ja-JP': jpjpData,
 };
 
-
-scraping.getTVProgramm("東京", "バラエティ").then((r) => console.log(r));
-postalcode.getPrefectures("1140023")
-  .then((r) => console.log(r))
+const testAPI = () => {
+  postalcode.getPrefectures("1140023")
+  .then((prefecture) => {
+    return scraping.getTVProgramm(prefecture, "バラエティ");
+  })
+  .then((r) => console.log(r["title"]))
   .catch((e) => console.log(e));
+}
