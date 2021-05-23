@@ -5,7 +5,7 @@ const postalcode = require('./postalcode');
 const scraping = require('./scraping');
 
 // core functionality for fact skill
-const GetNewFactHandler = {
+const RecommendHandler = {
   canHandle(handlerInput) {
     const request = handlerInput.requestEnvelope.request;
     // checks request type
@@ -13,21 +13,17 @@ const GetNewFactHandler = {
       || (request.type === 'IntentRequest'
         && request.intent.name === 'RecommendIntent');
   },
-  handle(handlerInput) {
+  async handle(handlerInput) {
     const requestAttributes = handlerInput.attributesManager.getRequestAttributes();
-    // gets a random fact by assigning an array to the variable
-    // the random item from the array will be selected by the i18next library
-    // the i18next library is set up in the Request Interceptor
-    const randomFact = requestAttributes.t('FACTS');
-    // concatenates a standard message with the random fact
-    const speakOutput = requestAttributes.t('GET_FACT_MESSAGE') + randomFact;
+    const response = await fetchAPI("1140023", "バラエティ");
+    const speakOutput = requestAttributes.t('HEAD_MESSAGE') + response["title"];
 
     return handlerInput.responseBuilder
       .speak(speakOutput)
       // Uncomment the next line if you want to keep the session open so you can
       // ask for another fact without first re-opening the skill
       // .reprompt(requestAttributes.t('HELP_REPROMPT'))
-      .withSimpleCard(requestAttributes.t('SKILL_NAME'), randomFact)
+      .withSimpleCard(requestAttributes.t('SKILL_NAME'), response["title"])
       .getResponse();
   },
 };
@@ -139,7 +135,7 @@ const skillBuilder = Alexa.SkillBuilders.custom();
 
 exports.handler = skillBuilder
   .addRequestHandlers(
-    GetNewFactHandler,
+    RecommendHandler,
     HelpHandler,
     ExitHandler,
     FallbackHandler,
@@ -155,27 +151,18 @@ exports.handler = skillBuilder
 // Update the name and messages to align with the theme of your skill
 const jpData = {
   translation: {
-    SKILL_NAME: '日本語版豆知識',
-    GET_FACT_MESSAGE: '知ってましたか？',
-    HELP_MESSAGE: '豆知識を聞きたい時は「豆知識」と、終わりたい時は「おしまい」と言ってください。どうしますか？',
+    SKILL_NAME: 'おすすめ番組ガイド',
+    HEAD_MESSAGE: '今日のおすすめ番組は、',
+    HELP_MESSAGE: 'おすすめ番組を聞きたい時は「おすすめ番組」と、終わりたい時は「おしまい」と言ってください。どうしますか？',
     HELP_REPROMPT: 'どうしますか？',
     ERROR_MESSAGE: '申し訳ありませんが、エラーが発生しました',
     STOP_MESSAGE: 'さようなら',
-    FACTS:
-      [
-        '水星の一年はたった88日です。',
-        '金星は水星と比べて太陽より遠くにありますが、気温は水星よりも高いです。',
-        '金星は反時計回りに自転しています。過去に起こった隕石の衝突が原因と言われています。',
-        '火星上から見ると、太陽の大きさは地球から見た場合の約半分に見えます。',
-        '木星の<sub alias="いちにち">1日</sub>は全惑星の中で一番短いです。',
-        '天の川銀河は約50億年後にアンドロメダ星雲と衝突します。',
-      ],
   },
 };
 
 const jpjpData = {
   translation: {
-    SKILL_NAME: '日本語版豆知識',
+    SKILL_NAME: 'おすすめ番組ガイド',
   },
 };
 
@@ -185,13 +172,11 @@ const languageStrings = {
   'ja-JP': jpjpData,
 };
 
-const testAPI = () => {
-  postalcode.getPrefectures("1140023")
+const fetchAPI = (code, category) => {
+  return postalcode.getPrefectures(code)
   .then((prefecture) => {
-    return scraping.getTVProgramm(prefecture, "バラエティ");
+    return scraping.getTVProgramm(prefecture, category);
   })
-  .then((r) => console.log(r["title"]))
-  .catch((e) => console.log(e));
+  // .then((res) => console.log(res["title"]))
+  .catch((err) => console.log(err));
 }
-
-testAPI()
