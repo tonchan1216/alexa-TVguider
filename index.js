@@ -11,7 +11,7 @@ const GetNewFactHandler = {
     // checks request type
     return request.type === 'LaunchRequest'
       || (request.type === 'IntentRequest'
-        && request.intent.name === 'GetNewFactIntent');
+        && request.intent.name === 'RecommendIntent');
   },
   handle(handlerInput) {
     const requestAttributes = handlerInput.attributesManager.getRequestAttributes();
@@ -193,3 +193,5 @@ const testAPI = () => {
   .then((r) => console.log(r["title"]))
   .catch((e) => console.log(e));
 }
+
+testAPI()

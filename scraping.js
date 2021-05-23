@@ -160,6 +160,4 @@ const getTVProgramm = async (loc, category) => {
   });
 };
 
-// getTVProgramm("東京", "バラエティ").then((r) => console.log(r));
-
 module.exports = { getTVProgramm }
