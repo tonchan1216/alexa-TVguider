@@ -37,6 +37,5 @@ GEO_URL=http://
   - category: バラエティ
 
 `responsne`
-  - 北海道（札幌）
-  - 大阪府
-  - 東京都　// default
+  - broadCastStartTime: 22:00:00
+  - title: お笑い番組
