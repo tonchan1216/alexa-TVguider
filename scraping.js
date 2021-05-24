@@ -104,26 +104,35 @@ const getTVProgramm = async (loc, category) => {
   const limit = 1;
   const offset = 0;
 
-  const today = new Date();
-  const startDate =
-    today.getHours() > 18
-      ? today
-      : new Date(
-          today.getFullYear(),
-          today.getMonth(),
-          today.getDate(),
-          18,
-          0,
-          0
-        );
-  const startDateEnd = new Date(
-    today.getFullYear(),
-    today.getMonth(),
-    today.getDate(),
-    27,
+  const now = new Date();
+  const tzOffset = now.getTimezoneOffset() / 60;
+
+  const goldenStartHour = 9 - tzOffset;
+  const goldenEndHour = 18 - tzOffset;
+
+  let startDate = new Date(
+    now.getFullYear(),
+    now.getMonth(),
+    now.getDate(),
+    goldenStartHour,
     0,
     0
   );
+  const startDateEnd = new Date(
+    now.getFullYear(),
+    now.getMonth(),
+    now.getDate(),
+    goldenEndHour,
+    0,
+    0
+  );
+
+  if (now.getTime() > startDateEnd.getTime()) {
+    startDate.setHours(startDate.getHours() + 24);
+    startDateEnd.setHours(startDateEnd.getHours() + 24);
+  } else if (now.getTime() > startDate.getTime()) {
+    startDate = now;
+  }
 
   const options = {
     url: baseUrl,
@@ -144,6 +153,8 @@ const getTVProgramm = async (loc, category) => {
     json: true,
   };
 
+  console.log(options);
+
   return new Promise((resolve, reject) => {
     request(options)
       .then((body) => {
@@ -160,4 +171,4 @@ const getTVProgramm = async (loc, category) => {
   });
 };
 
-module.exports = { getTVProgramm }
+module.exports = { getTVProgramm };
