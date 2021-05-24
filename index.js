@@ -1,10 +1,10 @@
 const Alexa = require('ask-sdk-core');
 const i18n = require('i18next');
 
-const postalcode = require('./postalcode');
+const geolocation = require('./geolocation');
 const scraping = require('./scraping');
 
-// core functionality for fact skill
+// core functionality for skill
 const RecommendHandler = {
   canHandle(handlerInput) {
     const request = handlerInput.requestEnvelope.request;
@@ -15,15 +15,52 @@ const RecommendHandler = {
   },
   async handle(handlerInput) {
     const requestAttributes = handlerInput.attributesManager.getRequestAttributes();
-    const response = await fetchAPI("1140023", "バラエティ");
-    const speakOutput = requestAttributes.t('HEAD_MESSAGE') + response["title"];
+    let speakOutput = "";
+    let prefecture = "";
+    const defaultPrefecture = "東京都";
+    const category = "バラエティ";
+
+    //使っているAlexaデバイスが位置情報サービスに対応しているか確認
+    const isGeoSupported = handlerInput.requestEnvelope.context.System.device.supportedInterfaces.Geolocation;
+    if (isGeoSupported) {
+      const geoObject = handlerInput.requestEnvelope.context.Geolocation;
+      if (!geoObject || !geoObject.coordinate) {
+          //このスキルを使うユーザーが、位置情報サービスの権限を与えていない場合、Alexaアプリでカードを表示し、許可を促す
+          speakOutput = "'このスキルでは、あなたがお使いのデバイスの位置情報を利用します。デバイスの位置情報をAlexaアプリが利用可能になっていることを確認し、位置情報サービスのアクセス権を設定してください。'";
+          handlerInput.responseBuilder.withAskForPermissionsConsentCard(['alexa::devices:all:geolocation:read']);
+      } else {
+          //座標情報を取得
+          const coordinate = handlerInput.requestEnvelope.context.Geolocation.coordinate;
+          const latitude = coordinate.latitudeInDegrees; //緯度
+          const longitude = coordinate.longitudeInDegrees; //経度
+          try {
+            //座標情報から都道府県情報を取得。失敗したらデフォルト値
+            prefecture = await geolocation.searchByGeoLocation(latitude, longitude);
+          }
+          catch(e) {
+            console.log(e);
+            prefecture = defaultPrefecture;
+          }
+      }
+    } else { //デバイスがGeolocationに対応していない
+      console.log("デバイスがGeolocationに対応していない");
+      prefecture = defaultPrefecture;
+    }
+
+    if (prefecture != ""){
+      try {
+        const response = await scraping.getTVProgramm(prefecture, category);
+        console.log(response);
+        speakOutput = requestAttributes.t('HEAD_MESSAGE') + response["broadCastStartTime"] + requestAttributes.t('FROM_MESSAGE') + response["title"] + requestAttributes.t('FOOT_MESSAGE');
+        handlerInput.responseBuilder.withSimpleCard(requestAttributes.t('SKILL_NAME'), response["title"]);
+      } catch(e) {
+        console.log(e);
+        speakOutput = requestAttributes.t('ERROR_MESSAGE');
+      }
+    }
 
     return handlerInput.responseBuilder
       .speak(speakOutput)
-      // Uncomment the next line if you want to keep the session open so you can
-      // ask for another fact without first re-opening the skill
-      // .reprompt(requestAttributes.t('HELP_REPROMPT'))
-      .withSimpleCard(requestAttributes.t('SKILL_NAME'), response["title"])
       .getResponse();
   },
 };
@@ -153,6 +190,8 @@ const jpData = {
   translation: {
     SKILL_NAME: 'おすすめ番組ガイド',
     HEAD_MESSAGE: '今日のおすすめ番組は、',
+    FROM_MESSAGE: 'から',
+    FOOT_MESSAGE: 'です。',
     HELP_MESSAGE: 'おすすめ番組を聞きたい時は「おすすめ番組」と、終わりたい時は「おしまい」と言ってください。どうしますか？',
     HELP_REPROMPT: 'どうしますか？',
     ERROR_MESSAGE: '申し訳ありませんが、エラーが発生しました',
@@ -171,12 +210,3 @@ const languageStrings = {
   'ja': jpData,
   'ja-JP': jpjpData,
 };
-
-const fetchAPI = (code, category) => {
-  return postalcode.getPrefectures(code)
-  .then((prefecture) => {
-    return scraping.getTVProgramm(prefecture, category);
-  })
-  // .then((res) => console.log(res["title"]))
-  .catch((err) => console.log(err));
-}
