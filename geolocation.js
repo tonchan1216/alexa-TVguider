@@ -2,11 +2,11 @@ const request = require("request-promise");
 require("dotenv").config();
 
 const env = process.env;
-const baseUrl = env.ZIP_URL;
+const baseUrl = env.GEO_URL;
 
-const getPrefectures = async (postalCode) => {
+const searchByGeoLocation = async (x,y) => {
   const options = {
-    url: baseUrl + "?zipcode=" + postalCode,
+    url: baseUrl + "?method=searchByGeoLocation&x=" + x + "&y=" + y,
     method: "GET",
     json: true,
   };
@@ -14,17 +14,16 @@ const getPrefectures = async (postalCode) => {
   return new Promise((resolve, reject) => {
     request(options)
       .then((body) => {
-        if (body["status"] != "200") {
-          throw body["status"] + ": " + body["message"];
+        const response = body["response"];
+        if(response["error"]){
+          throw response["error"];
         }
-        if (body["results"] == null) {
-          throw "404: Not Found";
-        }
-        const address = body["results"][0]["address1"];
+
+        const prefecture = response["location"][0]["prefecture"];
         let area = "";
 
-        if (address == "北海道") {
-          const city = body["results"][0]["address2"];
+        if (prefecture == "北海道") {
+          const city = response["location"][0]["city"];
           if (city.match(/函館市|北斗市|知内町|木古内町|七飯町/)) {
             area = "（函館）";
           } else if (
@@ -47,8 +46,7 @@ const getPrefectures = async (postalCode) => {
             area = "（札幌）"; // default = Sapporo
           }
         }
-
-        resolve(address + area);
+        resolve(prefecture + area);
       })
       .catch((err) => {
         reject(err);
@@ -56,4 +54,4 @@ const getPrefectures = async (postalCode) => {
   });
 };
 
-module.exports = { getPrefectures }
+module.exports = { searchByGeoLocation }
