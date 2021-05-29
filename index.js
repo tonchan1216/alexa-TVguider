@@ -192,7 +192,7 @@ const jpData = {
     HEAD_MESSAGE: '今日のおすすめ番組は、',
     FROM_MESSAGE: 'から',
     FOOT_MESSAGE: 'です。',
-    HELP_MESSAGE: 'おすすめ番組を聞きたい時は「おすすめ番組」と、終わりたい時は「おしまい」と言ってください。どうしますか？',
+    HELP_MESSAGE: 'おすすめ番組を聞きたい時は「おすすめ番組をおしえて」と、終わりたい時は「おしまい」と言ってください。どうしますか？',
     HELP_REPROMPT: 'どうしますか？',
     ERROR_MESSAGE: '申し訳ありませんが、エラーが発生しました',
     STOP_MESSAGE: 'さようなら',
