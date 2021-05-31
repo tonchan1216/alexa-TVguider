@@ -16,8 +16,8 @@ const RecommendHandler = {
   async handle(handlerInput) {
     const requestAttributes = handlerInput.attributesManager.getRequestAttributes();
     let speakOutput = "";
-    let prefecture = "";
     const defaultPrefecture = "東京都";
+    let prefecture = defaultPrefecture;
     const category = "バラエティ";
 
     //使っているAlexaデバイスが位置情報サービスに対応しているか確認
@@ -41,24 +41,20 @@ const RecommendHandler = {
           }
           catch(e) {
             console.log(e);
-            prefecture = defaultPrefecture;
           }
       }
     } else { //デバイスがGeolocationに対応していない
       console.log("Geolocation非対応");
-      prefecture = defaultPrefecture;
     }
 
-    if (prefecture != ""){
-      try {
-        const response = await scraping.getTVProgramm(prefecture, category);
-        console.log(response);
-        speakOutput = requestAttributes.t('HEAD_MESSAGE') + response["broadCastStartTime"] + requestAttributes.t('FROM_MESSAGE') + response["title"] + requestAttributes.t('FOOT_MESSAGE');
-        handlerInput.responseBuilder.withSimpleCard(requestAttributes.t('SKILL_NAME'), response["title"]);
-      } catch(e) {
-        console.log(e);
-        speakOutput = requestAttributes.t('ERROR_MESSAGE');
-      }
+    try {
+      const response = await scraping.getTVProgramm(prefecture, category);
+      console.log(response);
+      speakOutput = requestAttributes.t('HEAD_MESSAGE') + response["broadCastStartTime"] + requestAttributes.t('FROM_MESSAGE') + response["title"] + requestAttributes.t('FOOT_MESSAGE');
+      handlerInput.responseBuilder.withSimpleCard(requestAttributes.t('SKILL_NAME'), response["title"]);
+    } catch(e) {
+      console.log(e);
+      speakOutput = requestAttributes.t('ERROR_MESSAGE');
     }
 
     return handlerInput.responseBuilder
