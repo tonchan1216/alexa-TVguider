@@ -26,8 +26,10 @@ const RecommendHandler = {
       const geoObject = handlerInput.requestEnvelope.context.Geolocation;
       if (!geoObject || !geoObject.coordinate) {
           //このスキルを使うユーザーが、位置情報サービスの権限を与えていない場合、Alexaアプリでカードを表示し、許可を促す
-          speakOutput = "'このスキルでは、あなたがお使いのデバイスの位置情報を利用します。デバイスの位置情報をAlexaアプリが利用可能になっていることを確認し、位置情報サービスのアクセス権を設定してください。'";
-          handlerInput.responseBuilder.withAskForPermissionsConsentCard(['alexa::devices:all:geolocation:read']);
+          return handlerInput.responseBuilder
+            .speak('このスキルではお客様の位置情報を使用します。位置情報の共有を有効にするには、Alexaアプリに移動し、指示に従って操作してください。')
+            .withAskForPermissionsConsentCard(['alexa::devices:all:geolocation:read'])
+            .getResponse();
       } else {
           //座標情報を取得
           const coordinate = handlerInput.requestEnvelope.context.Geolocation.coordinate;
@@ -35,7 +37,7 @@ const RecommendHandler = {
           const longitude = coordinate.longitudeInDegrees; //経度
           try {
             //座標情報から都道府県情報を取得。失敗したらデフォルト値
-            prefecture = await geolocation.searchByGeoLocation(latitude, longitude);
+            prefecture = await geolocation.searchByGeoLocation(longitude, latitude);
           }
           catch(e) {
             console.log(e);
@@ -43,7 +45,7 @@ const RecommendHandler = {
           }
       }
     } else { //デバイスがGeolocationに対応していない
-      console.log("デバイスがGeolocationに対応していない");
+      console.log("Geolocation非対応");
       prefecture = defaultPrefecture;
     }
 
